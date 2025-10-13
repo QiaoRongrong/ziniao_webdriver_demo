@@ -1,0 +1,26 @@
+ziniao:
+  # 浏览器配置
+  browser:
+    # 浏览器版本 v5或v6
+    version: v5
+    # 浏览器客户端路径
+    client_path: D:\SuperBrowser\starter.exe
+    # 存放chromedriver的文件夹路径
+    webdriver_path: D:\webdriver
+    # 浏览器socket端口，系统未被占用的端口
+    socket_port: 16851
+
+  # 企业登录的用户信息
+  user_info:
+    company: 您登入紫鸟浏览器的时候输入的企业公司名
+    username: 您登入紫鸟浏览器的时候输入的企业用户名
+    password: 您登入紫鸟浏览器的时候输入的密码
+task:
+  # 线程数
+  thread_num: 3
+  # 任务列表
+  amazon:
+#    - feedback_export # 反馈导出
+    - customer_voice_export # 客户评价导出
+    - business_report_export # 销售和流量业务报表导出
+    - orders_export # 订单导出
