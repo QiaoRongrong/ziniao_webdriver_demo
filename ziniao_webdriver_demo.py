@@ -41,15 +41,19 @@ def kill_process(version: Literal["v5", "v6"]):
     """
     # 确认是否继续
     confirmation = input("在启动之前，需要先关闭紫鸟浏览器的主进程，确定要终止进程吗？(y/n): ")
-    if version == "v5":
-        process_name = 'SuperBrowser.exe'
-    else:
-        process_name = 'ziniao.exe'
     if confirmation.lower() == 'y':
         if is_windows:
+            if version == "v5":
+                process_name = 'SuperBrowser.exe'
+            else:
+                process_name = 'ziniao.exe'
             os.system('taskkill /f /t /im ' + process_name)
+            time.sleep(3)
         elif is_mac:
             os.system('killall ziniao')
+            time.sleep(3)
+        elif is_linux:
+            os.system('killall ziniaobrowser')
             time.sleep(3)
     else:
         exit()
@@ -66,6 +70,8 @@ def start_browser():
         elif is_mac:
             cmd = ['open', '-a', client_path, '--args', '--run_type=web_driver', '--ipc_type=http',
                    '--port=' + str(socket_port)]
+        elif is_linux:
+            cmd = [client_path, '--no-sandbox', '--run_type=web_driver', '--ipc_type=http', '--port=' + str(socket_port)]
         else:
             exit()
         subprocess.Popen(cmd)
@@ -222,21 +228,36 @@ def get_browser_list() -> list:
 
 
 def get_driver(open_ret_json):
+    browser_path = open_ret_json.get('browserPath')
     core_type = open_ret_json.get('core_type')
-    if core_type == 'Chromium' or core_type == 0:
+    chrome_driver_path = None
+    # 检查店铺内核目录是否存在对应驱动程序
+    driver_exist = False
+    if browser_path:
+        if browser_path.endswith('superbrowser.exe') or browser_path.endswith('superbrowser'):
+            browser_path = os.path.dirname(browser_path)
+        if is_windows:
+            chrome_driver_path = os.path.join(browser_path, 'webdriver.exe')
+        else:
+            chrome_driver_path = os.path.join(browser_path, 'webdriver')
+        driver_exist = os.path.exists(chrome_driver_path)
+    # 如果不存在，根据内核版本匹配下载的驱动程序
+    if not driver_exist and (core_type == 'Chromium' or core_type == 0):
         major = open_ret_json.get('core_version').split('.')[0]
         if is_windows:
             chrome_driver_path = os.path.join(driver_folder_path, 'chromedriver%s.exe') % major
         else:
             chrome_driver_path = os.path.join(driver_folder_path, 'chromedriver%s') % major
-        print(f"chrome_driver_path: {chrome_driver_path}")
-        port = open_ret_json.get('debuggingPort')
-        options = webdriver.ChromeOptions()
-        options.add_argument('--log-level=3')
-        options.add_experimental_option("debuggerAddress", '127.0.0.1:' + str(port))
-        return webdriver.Chrome(service=Service(chrome_driver_path), options=options)
-    else:
+        driver_exist = os.path.exists(chrome_driver_path)
+    print(f"chrome_driver_path: {chrome_driver_path}")
+    if not driver_exist:
+        print(f"驱动程序不存在: {chrome_driver_path}")
         return None
+    port = open_ret_json.get('debuggingPort')
+    options = webdriver.ChromeOptions()
+    options.add_argument('--log-level=3')
+    options.add_experimental_option("debuggerAddress", '127.0.0.1:' + str(port))
+    return webdriver.Chrome(service=Service(chrome_driver_path), options=options)
 
 
 def open_ip_check(driver, ip_check_url):
@@ -368,7 +389,7 @@ def use_one_browser_run_task(browser):
     # 使用驱动实例开启会话
     driver = get_driver(ret_json)
     if driver is None:
-        print(f"=====关闭店铺：{store_name}=====")
+        print(f"=====驱动获取失败，关闭店铺：{store_name}=====")
         close_store(store_id)
         return
 
@@ -430,13 +451,10 @@ def use_all_browser_run_task_with_thread_pool(browser_list, max_threads=3):
 
 
 if __name__ == "__main__":
-    """ 需要从系统右下角角标将紫鸟浏览器退出后再运行"""
+    """ 需要从系统角标将紫鸟浏览器完全退出后再运行"""
     is_windows = platform.system() == 'Windows'
     is_mac = platform.system() == 'Darwin'
-
-    if not is_windows and not is_mac:
-        print("webdriver/cdp只支持windows和mac操作系统")
-        exit()
+    is_linux = platform.system() == 'Linux'
 
     with open('./config/config.yaml', 'r', encoding='utf-8') as config:
         cfg = yaml.safe_load(config)
@@ -458,7 +476,7 @@ if __name__ == "__main__":
     }
 
     """  
-    windows用
+    windows用，V5版本
     有店铺运行的时候，会删除失败
     删除所有店铺缓存，非必要的，如果店铺特别多、硬盘空间不够了才要删除
     delete_all_cache()

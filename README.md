@@ -18,10 +18,10 @@ config.yaml文件
 ziniao:
   browser:
     # 浏览器版本 v5或v6
-    version: v5
-    # 浏览器客户端路径
-    client_path: D:\SuperBrowser\starter.exe
-    # 浏览器驱动路径
+    version: v6
+    # 浏览器客户端路径，windows V5程序名为starter.exe，V6程序名为ziniao.exe。mac为客户端程序名称ziniao。linux为客户端程序路径/opt/ziniao/ziniaobrowser
+    client_path: D:\ziniao\ziniao.exe
+    # 浏览器驱动路径，存放chromedriver的文件夹路径。linux使用内核自带的driver程序，不再额外下载，可不设置
     webdriver_path: D:\webdriver
 ```
 
@@ -30,9 +30,9 @@ ziniao:
 ziniao:
   # 企业登录的用户信息
   user_info:
-    company: 您登入紫鸟浏览器的时候输入的企业公司名
-    username: 您登入紫鸟浏览器的时候输入的企业用户名
-    password: 您登入紫鸟浏览器的时候输入的密码
+    company: 您登录紫鸟浏览器的时候输入的企业公司名
+    username: 您登录紫鸟浏览器的时候输入的企业用户名
+    password: 您登录紫鸟浏览器的时候输入的密码
 ```
 
 3、修改运行脚本配置
